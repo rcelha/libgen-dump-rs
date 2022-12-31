@@ -6,7 +6,7 @@ use sqlx::Connection;
 use std::future;
 use std::path::PathBuf;
 
-use libgen_redumper::repositories::*;
+use libgen_dump_rs::repositories::*;
 
 use clap::Parser;
 
@@ -50,7 +50,7 @@ async fn main() {
     let step = total / 100;
     let mut books_stream = mysql.list_books().await.enumerate();
 
-    println!("Inserting new books");
+    println!("Inserting new books ({} total)", total);
     while let Some((idx, Ok(i))) = books_stream.next().await {
         if idx % step == 0 {
             println!("{}%", idx / step);
