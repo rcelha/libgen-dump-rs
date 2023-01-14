@@ -15,8 +15,9 @@ pub trait LibgenRepository {
 
     async fn initialize_repository(&mut self) {}
 
-    /// todo shouldn't be a vec, but a stream!
     async fn list_books(&mut self) -> BoxStream<Result<LibgenBook, Self::Error>>;
+
+    async fn search(&mut self, value: String) -> BoxStream<Result<LibgenBook, Self::Error>>;
 
     async fn insert_book(&mut self, book: LibgenBook);
 
@@ -29,7 +30,7 @@ pub struct SqliteTargetRepository {
 
 #[async_trait::async_trait]
 impl LibgenRepository for SqliteTargetRepository {
-    type Error = ();
+    type Error = sqlx::Error;
 
     async fn initialize_repository(&mut self) {
         let mut transaction = self.conn.begin().await.unwrap();
@@ -50,8 +51,44 @@ impl LibgenRepository for SqliteTargetRepository {
         transaction.commit().await.unwrap();
     }
 
-    async fn list_books(&mut self) -> BoxStream<Result<LibgenBook, ()>> {
+    async fn list_books(&mut self) -> BoxStream<Result<LibgenBook, Self::Error>> {
         todo!();
+    }
+
+    async fn search(&mut self, value: String) -> BoxStream<Result<LibgenBook, Self::Error>> {
+        let q = sqlx::query(
+            r#"SELECT
+                   md5,
+                   title,
+                   extension,
+                   author,
+                   ipfs_cid,
+                   language
+                FROM libgen
+                WHERE libgen MATCH $1
+                ORDER BY rank DESC
+            "#,
+        )
+        .bind(value);
+        q.fetch(&mut self.conn)
+            .map_ok(|row| {
+                let md5 = row.get("md5");
+                let title = row.get("title");
+                let extension = row.get("extension");
+                let author = row.get("author");
+                let ipfs_cid = row.get("ipfs_cid");
+                let language = row.get("language");
+
+                LibgenBook {
+                    md5,
+                    title,
+                    extension,
+                    author,
+                    ipfs_cid,
+                    language,
+                }
+            })
+            .boxed()
     }
 
     async fn get_total(&mut self) -> usize {
@@ -114,6 +151,10 @@ impl LibgenRepository for MysqlLibgenRepository {
                 }
             })
             .boxed()
+    }
+
+    async fn search(&mut self, value: String) -> BoxStream<Result<LibgenBook, Self::Error>> {
+        todo!();
     }
 
     async fn get_total(&mut self) -> usize {

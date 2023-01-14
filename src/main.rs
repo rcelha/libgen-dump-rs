@@ -1,19 +1,17 @@
+#[cfg(feature = "cli")]
+use clap::Parser;
 use futures::StreamExt;
-use futures::TryStreamExt;
+use libgen_dump_rs::repositories::*;
 use sqlx::mysql::MySqlConnection;
 use sqlx::sqlite::SqliteConnection;
 use sqlx::Connection;
-use std::future;
 use std::path::PathBuf;
-
-use libgen_dump_rs::repositories::*;
-
-use clap::Parser;
 
 /// First line
 ///
 /// Third line
 /// And the last line
+#[cfg(feature = "cli")]
 #[derive(Parser, Debug)]
 struct Args {
     /// The MySQL origin connection string
@@ -23,18 +21,21 @@ struct Args {
     output: PathBuf,
 }
 
+#[cfg(feature = "cli")]
 async fn origin_repos(conn: String) -> impl LibgenRepository {
     println!("trying to connect to {}", conn);
     let conn = MySqlConnection::connect(&conn).await.unwrap();
     MysqlLibgenRepository { conn }
 }
 
+#[cfg(feature = "cli")]
 async fn target_repos(path: String) -> impl LibgenRepository {
     let url = format!("sqlite://{}?mode=rwc", path);
     let conn = SqliteConnection::connect(&url).await.unwrap();
     SqliteTargetRepository { conn }
 }
 
+#[cfg(feature = "cli")]
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
@@ -58,3 +59,6 @@ async fn main() {
         sqlite.insert_book(i).await;
     }
 }
+
+#[cfg(not(feature = "cli"))]
+fn main() {}

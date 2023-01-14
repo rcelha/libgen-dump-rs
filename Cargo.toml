@@ -3,15 +3,26 @@ name = "libgen-dump-rs"
 version = "0.1.0"
 edition = "2021"
 
+
+[features]
+serde = ["dep:serde"]
+models = []
+sqlx = ["models", "dep:async-trait", "dep:futures", "dep:sqlx", "dep:tokio"]
+cli = ["models", "sqlx", "dep:clap"]
+all = ["serde", "models", "sqlx", "cli"]
+
+default = ["all"]
+
 [dependencies]
-clap = { version = "4.0.32", features = ["derive"] }
-tokio = { version = "1", features = ["macros"] }
+async-trait = { version = "0.1.60", optional = true }
+clap = { version = "4.0.32", features = ["derive"], optional = true }
+futures = { version = "0.3.25", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
 sqlx = { version = "0.6", features = [
-  "runtime-tokio-native-tls",
+  "runtime-tokio-rustls",
   "sqlite",
   "mysql",
   "any",
   "chrono",
-] }
-futures = "0.3.25"
-async-trait = "0.1.60"
+], optional = true }
+tokio = { version = "1", features = ["macros"], optional = true }
