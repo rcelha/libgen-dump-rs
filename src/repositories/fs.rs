@@ -29,7 +29,7 @@ impl FileSystemRepository {
     }
 
     fn is_extension_valid(&self, book: &LibgenBook) -> bool {
-        match book.extension.as_str() {
+        match book.file_extension.as_str() {
             "zip" | "cbz" | "gz" | "html" | "lit" | "txt" | "cbr" | "docx" | "chm" | "rtf"
             | "fb2" | "azw3" | "mobi" | "doc" | "djvu" | "epub" | "pdf" => true,
             _ => false,
@@ -68,13 +68,13 @@ impl super::LibgenRepository for FileSystemRepository {
 
                 let file_name2 = file_name.clone();
                 let mut split_name = file_name2.rsplitn(2, ".");
-                let extension = split_name.next().unwrap_or("").to_string();
+                let file_extension = split_name.next().unwrap_or("").to_string();
                 let title = split_name.next().unwrap_or("").to_string();
 
                 let book = LibgenBook {
                     md5: "".to_string(),
                     title,
-                    extension,
+                    file_extension,
                     author: "".to_string(),
                     ipfs_cid: None,
                     path: Some(file_name.clone()),
@@ -174,7 +174,7 @@ mod test {
         let book = LibgenBook {
             md5: "12345".to_string(),
             title: "The lord of the rings".to_string(),
-            extension: "epub".to_string(),
+            file_extension: "epub".to_string(),
             author: "Tokien".to_string(),
             ipfs_cid: None,
             path: None,

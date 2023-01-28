@@ -92,7 +92,7 @@ impl<'a> super::LibgenRepository for SqliteTargetRepository<'a> {
             while let Some(Ok(row)) = result.next().await {
                 let md5 = row.get("md5");
                 let title = row.get("title");
-                let extension = row.get("extension");
+                let file_extension = row.get("extension");
                 let author = row.get("author");
                 let ipfs_cid = Some(row.get("ipfs_cid"));
                 let path = None;
@@ -102,7 +102,7 @@ impl<'a> super::LibgenRepository for SqliteTargetRepository<'a> {
                 let book = LibgenBook {
                     md5,
                     title,
-                    extension,
+                    file_extension,
                     author,
                     ipfs_cid,
                     path,
@@ -131,7 +131,7 @@ impl<'a> super::LibgenRepository for SqliteTargetRepository<'a> {
         )
         .bind(book.md5)
         .bind(book.title)
-        .bind(book.extension)
+        .bind(book.file_extension)
         .bind(book.author)
         .bind(book.ipfs_cid)
         .bind(book.language);

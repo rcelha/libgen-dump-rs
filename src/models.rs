@@ -5,7 +5,7 @@ use std::fmt::{Display, Write};
 pub struct LibgenBook {
     pub md5: String,
     pub title: String,
-    pub extension: String,
+    pub file_extension: String,
     pub author: String,
     pub ipfs_cid: Option<String>,
     pub path: Option<String>,
@@ -23,7 +23,7 @@ impl Display for LibgenBook {
         f.write_char('-')?;
         f.write_str(&self.language)?;
         f.write_char('.')?;
-        f.write_str(&self.extension)?;
+        f.write_str(&self.file_extension)?;
         Ok(())
     }
 }

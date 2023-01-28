@@ -52,7 +52,7 @@ impl<'a> super::LibgenRepository for MysqlLibgenRepository<'a> {
             .map_ok(|row| {
                 let md5 = row.get("MD5");
                 let title = row.get("Title");
-                let extension = row.get("Extension");
+                let file_extension = row.get("Extension");
                 let author = row.get("Author");
                 let ipfs_cid = Some(row.get("ipfs_cid"));
                 let path = None;
@@ -62,7 +62,7 @@ impl<'a> super::LibgenRepository for MysqlLibgenRepository<'a> {
                 LibgenBook {
                     md5,
                     title,
-                    extension,
+                    file_extension,
                     author,
                     ipfs_cid,
                     path,
