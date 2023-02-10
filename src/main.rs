@@ -2,6 +2,8 @@
 use clap::Parser;
 use futures::StreamExt;
 use libgen_dump_rs::repositories::*;
+use libgen_dump_rs::transaction::sqlx::SqlxRepositoryTransaction;
+use libgen_dump_rs::transaction::RepositoryTransaction;
 use sqlx::mysql::MySqlConnection;
 use sqlx::sqlite::SqliteConnection;
 use sqlx::Connection;
@@ -22,22 +24,29 @@ struct Args {
 }
 
 #[cfg(feature = "cli")]
-async fn origin_repos(conn: String) -> impl LibgenRepository {
+async fn origin_repos<'a>(conn: String) -> MysqlLibgenRepository<'a> {
     println!("trying to connect to {}", conn);
     let conn = MySqlConnection::connect(&conn).await.unwrap();
-    MysqlLibgenRepository { conn }
+    MysqlLibgenRepository::new(conn)
 }
 
 #[cfg(feature = "cli")]
-async fn target_repos(path: String) -> impl LibgenRepository {
+async fn target_conn(path: String) -> SqliteConnection {
     let url = format!("sqlite://{}?mode=rwc", path);
-    let conn = SqliteConnection::connect(&url).await.unwrap();
-    SqliteTargetRepository { conn }
+    SqliteConnection::connect(&url).await.unwrap()
+}
+
+#[cfg(feature = "cli")]
+async fn target_repos<'a>(path: String) -> SqliteTargetRepository<'a> {
+    let conn = target_conn(path).await;
+    SqliteTargetRepository::new(conn)
 }
 
 #[cfg(feature = "cli")]
 #[tokio::main]
 async fn main() {
+    use sqlx::AnyConnection;
+
     let args = Args::parse();
     println!("{:#?}", args);
 
@@ -52,12 +61,19 @@ async fn main() {
     let mut books_stream = mysql.list_books().await.enumerate();
 
     println!("Inserting new books ({} total)", total);
+
+    let tconn = target_conn(args.output.to_string_lossy().to_string()).await;
+    let mut conn: AnyConnection = tconn.into();
+    let transaction = conn.begin().await.unwrap();
+    let mut repos_transaction = SqlxRepositoryTransaction::new(transaction);
+
     while let Some((idx, Ok(i))) = books_stream.next().await {
         if idx % step == 0 {
             println!("{}%", idx / step);
         }
-        sqlite.insert_book(i).await;
+        sqlite.insert_book(&mut repos_transaction, i).await;
     }
+    repos_transaction.commit().await.unwrap();
 }
 
 #[cfg(not(feature = "cli"))]

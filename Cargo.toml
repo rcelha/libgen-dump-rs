@@ -14,6 +14,7 @@ all = ["serde", "models", "sqlx", "cli"]
 default = ["all"]
 
 [dependencies]
+async-stream = "0.3.3"
 async-trait = { version = "0.1.60", optional = true }
 clap = { version = "4.0.32", features = ["derive"], optional = true }
 futures = { version = "0.3.25", optional = true }
@@ -26,3 +27,5 @@ sqlx = { version = "0.6", features = [
   "chrono",
 ], optional = true }
 tokio = { version = "1", features = ["macros"], optional = true }
+tokio-stream = "0.1.11"
+xattr = "1.0.0"
